@@ -1,0 +1,48 @@
+<h1>Reading Files in Java the Correct Way (Part 1)</h1>
+Java offers multiple approaches to file reading, each with a direct impact on
+application efficiency. Since reading files involves performing I/O operations,
+selecting the appropriate method is crucial. Let’s discuss these methods and how
+they compare in terms of performance.
+
+As you walk through this article, I advise you to read the documentation of the
+classes and methods as they are introduced. This article does not cover all
+the methods and classes (obviously), nor all the intricacies of file reading.
+However, it will prove useful for Java beginners/intermediate and those who haven’t
+worked with I/O in java before.
+
+<h2>1. Reading files correctly</h2>
+
+From the machine perspective, a file is a sequence of bytes stored on disk. If the
+file contains textual data, then each character in the file is encoded into one or
+more bytes using some charset encoding. ASCII, UTF-8, and UTF-16 are examples of character
+encodings. My machine uses UTF-8 by default. Reading text files one byte at a time (1 byte per disk IO)
+may or may not be correct nor efficient, depending on the charset encoding. How about
+an example. I have a file named <b>my_poem.txt</> with the following content:
+
+The content of the file consist of ASCII characters. Each ASCII character is encoded with
+a single bye. UTF-8 is backward compatible with ASCII, so we should get away with decoding
+each byte separately.
+
+To read the bytes, we can use an InputStream, a superclass of all classes representing an
+input stream of bytes. Since we are reading a file, we are going to use the <ib>FileInputStream</>
+implementation.
+
+We instantiated a FileInputStream inside a try-with-resources block to handle the closing of
+the stream automatically. Most I/O operations throw the checked IOException, thus we are obliged
+to catch this exception or include it in the throws clause of the enclosing method.
+
+<q2>The int read() method, reads the next byte from the input stream and returns -1 when
+the stream is empty. In this example we are using a while loop to read every byte in the file,
+one byte at a time, casting it to its corresponding ASCII character and printing it to the standard
+output. Note that the value returned by read() is always ≤ 127 (the most significant bit is always
+set to 0 so an ASCII character is effectively 7 bits allowing for 127 different characters).
+The output of the above program matches exactly what’s in the file.</q2>
+
+However, this program is vulnerable, and will fail to produce the correct output if the file
+was updated to contain non-ASCII characters that spans multiple bytes. Actually let’s do just that:
+I updated my_poem.txt to the following.
+
+To correct the program, we should use a proper decoding mechanism. Fortunately, Java offers the
+InputStreamReader, which reads from an InputStream and decodes the bytes according to the
+specified charset encoding. The default encoding used by InputStreamReader class is the system’s
+default charset. which is exactly what I need. Let’s see how <u>InputStreamReader</> works.
