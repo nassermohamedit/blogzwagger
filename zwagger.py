@@ -61,10 +61,16 @@ class ZwaggerConvert:
                 for r in t:
                     if r in tags:
                         sub_tags.append(r)
+        for i in range(len(sub_tags)):
+            z = tags.get(sub_tags[i])
+            if z.is_html_tag:
+                sub_tags = (sub_tags[i],) + tuple(sub_tags[:i]) + tuple(sub_tags[i+1:])
+                break
         html = tuple()
         for t in sub_tags:
             z = tags.get(t)
-            if z.is_html_tag: html += (Html(z.get_html_tag()),)
+            if z.is_html_tag:
+                html += (Html(z.get_html_tag()),)
             elif len(html) == 0: html += (Html(z.get_html_tag(), [z.get_css_class()]),)
             else: html[len(html) - 1].add_class(z.get_css_class())
         self.html_tag_queue.append(html)
@@ -112,9 +118,6 @@ class Zwagger:
         else: os.rename(f"{self.out_name}.swp", self.out_name)
 
     def _copy_zwg_html(self):
-        a = input()
-        print(a)
-        print(open("temp.html", 'r').read())
         self.swp_file.write(open("temp.html", 'r').read())
 
 
