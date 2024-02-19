@@ -1,13 +1,66 @@
+:root {
+    --background-col: black;
+    --text-col: white;
+    --text-col-sec: rgba(255, 255, 255, 0.8);
+    --line-col: rgba(255, 255, 255, 0.5);
+    --font-fam: 'Roboto Mono', monospace;
+    --line-height: 33px;
 
-.p {
-    color: rgba(255, 255, 255, 0.8);
+    --font-size-lg: 25px;
+    --font-size-md: 21px;
+    --font-size-sm: 19px;
+
+    --h1-font-size: 50px;
+    --h1-font-weight: 900;
+    --h1-align: center;
+
+    --h2-font-size: 27px;
+    --h3-font-size: 22px;
+}
+
+* {
+    margin-top: 25px;
+}
+
+div.container.zwg {
+    background-color: var(--background-col);
+    color: var(--text-col);
+    padding: 10px;
+    font-family: var(--font-fam);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    width: 850px;
+}
+
+h1.zwg {
+    font-size: var(--h1-font-size);
+    font-weight: var(--h1-font-weight);
+    text-align: var(--h1-align);
+}
+
+.meta-info.zwg {
+    color: var(--text-col-sec);
+    font-style: italic;
+    font-size: var(--font-size-sm);
+    display: block;
+    text-align: center;
+}
+
+.resume.zwg {
+    font-size: var(--font-size-md);
+    font-style: italic;
+    color: var(--text-col-sec);
+}
+
+p.zwg {
+    color: var(--text-col-sec);
     font-weight: normal;
     text-align: left;
     font-style: normal;
 
-    font-size: 21px;
+    font-size: var(--font-size-md);
     letter-spacing: -0.003em;
-    line-height: 33px;
+    line-height: var(line-height);
     word-break: break-word;
 
     display: block;
@@ -60,11 +113,4 @@
 
 .z {
     text-decoration: line-through;
-}
-
-.t2 {
-    font-size: 40px;
-    font-weight: 900;
-    width: 100%;
-    display: block;
 }

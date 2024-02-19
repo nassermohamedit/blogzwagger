@@ -1,18 +1,10 @@
 
-html {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    position: relative;
-    box-sizing: border-box;
-}
 
 html {
     height: 100%;
     margin: 0;
     padding: 0;
     position: relative;
-    -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
     box-sizing: border-box;
     -webkit-text-size-adjust: 100%;
@@ -25,16 +17,18 @@ body {
     margin: 0;
     padding: 0;
     position: relative;
+    background-color: black
 }
 
 .content {
-    background-color: rgb(205, 200, 200);
-    position: absolute;
     top: 0;
     bottom: 0;
-    left: 20%;
-    right: 20%;
     margin: 0;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    adjust-content: center;
+    align-items: center;
 }
 
 
