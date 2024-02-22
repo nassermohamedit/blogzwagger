@@ -39,22 +39,22 @@ class ZwaggerConvert:
         skip_tag = False
         for i, char in enumerate(line):
             if skip_tag:
-                if char == '>':
+                if char == '>' and line[i-1] != '\\':
                     skip_tag = False
                 continue
-            if char != '<': self.out_file.write(char)
+            if char != '<' or char == '<' and line[i-1] == '\\': self.out_file.write(char)
             else:
                 tag = ZwaggerConvert._read_tag(line[i+1:])
-                self.out_file.write(self.generate_html_tag(tag))
+                self.out_file.write(self._generate_html_tag(tag))
                 skip_tag = True
 
-    def generate_html_tag(self, current_tag):
-        if current_tag == '/':
+    def _generate_html_tag(self, tag):
+        if tag == '/':
             html_tags = self.html_tag_queue.pop()
             return f"{''.join([t.get_closing() for t in html_tags[::-1]])}"
         global tags
         sub_tags = []
-        for t in current_tag.split(','):
+        for t in tag.split(','):
             if t in tags:
                 sub_tags.append(t)
             else:
@@ -70,7 +70,9 @@ class ZwaggerConvert:
         for t in sub_tags:
             z = tags.get(t)
             if z.is_html_tag:
-                html += (Html(z.get_html_tag()),)
+                h = Html(z.get_html_tag())
+                h.add_class("zwg")
+                html += (h,)
             elif len(html) == 0: html += (Html(z.get_html_tag(), [z.get_css_class()]),)
             else: html[len(html) - 1].add_class(z.get_css_class())
         self.html_tag_queue.append(html)
@@ -80,20 +82,24 @@ class ZwaggerConvert:
 
     @classmethod
     def _read_tag(cls, line):
-        for c in line:
-            if c == '/': return '/'
-            if c not in {' ', '\t'}: break
         tag = ""
         for c in line:
             if c == '>': break
-            if c == ' ': continue
             tag += c
+        tag = tag.replace(" ", "").replace("\t", "")
+        if '\n' in tag: raise Exception("invalid tag")
+        if tag[0] == '/': return '/'
         return tag
 
 class Zwagger:
-    def __init__(self, in_name: str, out_name: str, generate_styles=True, conf_file=None):
-        self._converter = ZwaggerConvert(in_name, "temp.html")
-        self.out_name = out_name
+
+    zwg_container_open_tag = '<div class="container zwg">'
+
+
+    def __init__(self, zwg_in_name: str, html_in_name: str, out_name: str = None, generate_styles=True, conf_file=None):
+        self._converter = ZwaggerConvert(zwg_in_name, "temp.html")
+        self.html_in_name = html_in_name
+        self.out_name = html_in_name if out_name is None else out_name
         if generate_styles: self.conf_file = "zwagger.yml" if conf_file is None else conf_file
 
     def do_magic(self):
@@ -101,27 +107,28 @@ class Zwagger:
 
 
     def _copy_content(self):
-        self.out_file = open(self.out_name, 'r')
-        self.swp_file = open(f"{self.out_name}.swp", 'w')
+        self.html_in = open(self.html_in_name, 'r')
+        self.out_file = open(self.out_name, 'w')
         zwagger_mark = "{{}}"
         found = False
-        for line in self.out_file.readlines():
+        for line in self.html_in.readlines():
             index = line.find(zwagger_mark)
-            if index == -1: self.swp_file.write(line)
+            if index == -1: self.out_file.write(line)
             else:
                 found = True
-                self.swp_file.write(line[:index])
+                self.out_file.write(line[:index])
+                self.out_file.write(Zwagger.zwg_container_open_tag)
                 self._converter.convert()
                 self._copy_zwg_html()
-                self.swp_file.write(line[index + 4:])
-        if not found: os.remove(f"{self.out_name}.swp")
-        else: os.rename(f"{self.out_name}.swp", self.out_name)
+                self.out_file.write("</div>")
+                self.out_file.write(line[index + 4:])
+        if not found: os.remove(self.out_name)
 
     def _copy_zwg_html(self):
-        self.swp_file.write(open("temp.html", 'r').read())
+        self.out_file.write(open("temp.html", 'r').read())
 
 
 if __name__ == "__main__":
-    zwg = Zwagger("./test/test.zwg", "./test/zwagger_test.html")
+    zwg = Zwagger("./test/test.zwg", "./test/zwagger_test.html", "./test/out.html")
     zwg.do_magic()
 
