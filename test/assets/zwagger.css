@@ -57,10 +57,11 @@ p.zwg {
     font-weight: normal;
     text-align: left;
     font-style: normal;
+    line-height: var(--line-height);
 
     font-size: var(--font-size-md);
     letter-spacing: -0.003em;
-    line-height: var(line-height);
+    line-height: var(--line-height);
     word-break: break-word;
 
     display: block;
