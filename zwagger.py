@@ -4,6 +4,7 @@ from html import Html
 
 
 tags = {
+    "default": ZTag("", html_tag="span"),
     "p": ZTag("p", css_class="p", description="Normal text"),
     "b": ZTag("b", css_class="b", description="Bold text"),
     "i": ZTag("i", css_class="i", description="Italic text"),
@@ -42,7 +43,7 @@ class ZwaggerConvert:
                 if char == '>' and line[i-1] != '\\':
                     skip_tag = False
                 continue
-            if char != '<' or char == '<' and line[i-1] == '\\': self.out_file.write(char)
+            if char != '<' or (char == '<' and line[i-1] == '\\'): self.out_file.write(char)
             else:
                 tag = ZwaggerConvert._read_tag(line[i+1:])
                 self.out_file.write(self._generate_html_tag(tag))
@@ -50,35 +51,14 @@ class ZwaggerConvert:
 
     def _generate_html_tag(self, tag):
         if tag == '/':
-            html_tags = self.html_tag_queue.pop()
-            return f"{''.join([t.get_closing() for t in html_tags[::-1]])}"
-        global tags
-        sub_tags = []
-        for t in tag.split(','):
-            if t in tags:
-                sub_tags.append(t)
-            else:
-                for r in t:
-                    if r in tags:
-                        sub_tags.append(r)
-        for i in range(len(sub_tags)):
-            z = tags.get(sub_tags[i])
-            if z.is_html_tag:
-                sub_tags = (sub_tags[i],) + tuple(sub_tags[:i]) + tuple(sub_tags[i+1:])
-                break
-        html = tuple()
-        for t in sub_tags:
-            z = tags.get(t)
-            if z.is_html_tag:
-                h = Html(z.get_html_tag())
-                h.add_class("zwg")
-                html += (h,)
-            elif len(html) == 0: html += (Html(z.get_html_tag(), [z.get_css_class()]),)
-            else: html[len(html) - 1].add_class(z.get_css_class())
-        self.html_tag_queue.append(html)
-        html_string = ""
-        for h in html: html_string += h.get_html()
-        return html_string
+            html_tag = self.html_tag_queue.pop()
+            return html_tag.get_closing()
+        ztag, modifiers = ZwaggerConvert._get_ztag_modifiers(tag)
+        html_tag = Html(ztag.get_html_tag())
+        self.html_tag_queue.append(html_tag)
+        for m in modifiers:
+            html_tag.add_class(m.get_css_class())
+        return html_tag.get_html()
 
     @classmethod
     def _read_tag(cls, line):
@@ -91,10 +71,29 @@ class ZwaggerConvert:
         if tag[0] == '/': return '/'
         return tag
 
+    @classmethod
+    def _get_ztag_modifiers(cls, tag):
+        elements = tag.split(',')
+        ztag = None
+        modifiers = []
+        for e in elements:
+            t = tags.get(e, None)
+            if t is not None:
+                if t.is_html_tag and ztag is None: ztag = t
+                elif not t.is_html_tag: modifiers.append(t)
+            else:
+                ms = filter(lambda x: x in tags, e.split())
+                ms = map(lambda x: tags.get(x), ms)
+                modifiers += list(ms)
+        if ztag is None: ztag = tags.get("default")
+        return ztag, modifiers
+
+
+
+
+
 class Zwagger:
-
     zwg_container_open_tag = '<div class="container zwg">'
-
 
     def __init__(self, zwg_in_name: str, html_in_name: str, out_name: str = None, generate_styles=True, conf_file=None):
         self._converter = ZwaggerConvert(zwg_in_name, "temp.html")
