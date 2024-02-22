@@ -58,6 +58,7 @@ class ZwaggerConvert:
         self.html_tag_queue.append(html_tag)
         for m in modifiers:
             html_tag.add_class(m.get_css_class())
+        html_tag.add_class("zwg")
         return html_tag.get_html()
 
     @classmethod
