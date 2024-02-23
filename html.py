@@ -16,5 +16,8 @@ class Html:
             return f"<{self.tag_name}>"
         return f"<{self.tag_name} class=\"{' '.join(self.classes)}\">"
 
-    def get_closing(self):
+    def get_closing_tag(self):
         return f"</{self.tag_name}>"
+
+    def get_name(self):
+        return self.tag_name
