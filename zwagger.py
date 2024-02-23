@@ -5,7 +5,7 @@ from html import Html
 
 tags = {
     "default": ZTag("", html_tag="span"),
-    "p": ZTag("p", css_class="p", description="Normal text"),
+    "p": ZTag("p", html_tag="p", css_class="p", description="Normal text"),
     "b": ZTag("b", css_class="b", description="Bold text"),
     "i": ZTag("i", css_class="i", description="Italic text"),
     "c": ZTag("c", css_class="c", description="Centered text"),
@@ -15,7 +15,8 @@ tags = {
     "z": ZTag("z", css_class="z", description="Line through text"),
     "h1": ZTag("h1", html_tag="h1", description="Heading 1"),
     "h2": ZTag("h2", html_tag="h2", description="Heading 2"),
-    "h3": ZTag("h3", html_tag="h3", description="Heading 3")
+    "h3": ZTag("h3", html_tag="h3", description="Heading 3"),
+    "resume": ZTag("resume", html_tag="p", css_class="resume", description="blog resume")
 }
 
 
@@ -39,11 +40,18 @@ class ZwaggerConvert:
     def _interpret(self, line):
         skip_tag = False
         for i, char in enumerate(line):
+            if char == '\n' and len(self.html_tag_queue) == 0:
+                continue
             if skip_tag:
                 if char == '>' and line[i-1] != '\\':
                     skip_tag = False
                 continue
-            if char != '<' or (char == '<' and line[i-1] == '\\'): self.out_file.write(char)
+            if char != '<' or (char == '<' and line[i-1] == '\\'):
+                n = len(self.html_tag_queue)
+                if n == 0: self.out_file.write(self._generate_html_tag("p"))
+                if char == '\n' and self.html_tag_queue[n-1].get_name() == "p" and line[i-1] == '\n':
+                    self.out_file.write(self._generate_html_tag("/"))
+                self.out_file.write(char)
             else:
                 tag = ZwaggerConvert._read_tag(line[i+1:])
                 self.out_file.write(self._generate_html_tag(tag))
@@ -52,9 +60,12 @@ class ZwaggerConvert:
     def _generate_html_tag(self, tag):
         if tag == '/':
             html_tag = self.html_tag_queue.pop()
-            return html_tag.get_closing()
+            return html_tag.get_closing_tag()
         ztag, modifiers = ZwaggerConvert._get_ztag_modifiers(tag)
         html_tag = Html(ztag.get_html_tag())
+        css_class = ztag.get_css_class()
+        if css_class is not None:
+            html_tag.add_class(css_class)
         self.html_tag_queue.append(html_tag)
         for m in modifiers:
             html_tag.add_class(m.get_css_class())
@@ -80,7 +91,8 @@ class ZwaggerConvert:
         for e in elements:
             t = tags.get(e, None)
             if t is not None:
-                if t.is_html_tag and ztag is None: ztag = t
+                if t.is_html_tag and ztag is None:
+                    ztag = t
                 elif not t.is_html_tag: modifiers.append(t)
             else:
                 ms = filter(lambda x: x in tags, e.split())
